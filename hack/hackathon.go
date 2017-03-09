@@ -62,9 +62,9 @@ type Item struct {
 //				Used as an index when querying all vehicles.
 //==============================================================================================================================
 
-type Items_Holder struct {
-	items 	[]string `json:"itemSNs"`
-}
+//type Items_Holder struct {
+//	items 	[]string `json:"itemSNs"`
+//}
 
 //==============================================================================================================================
 //	User_and_eCert - Struct for storing the JSON of a user and their ecert
@@ -84,13 +84,13 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//				0
 	//			peer_address
 
-	var allItems Items_Holder
+	//var allItems Items_Holder
 
-	bytes, err := json.Marshal(allItems)
+	//bytes, err := json.Marshal(allItems)
 
-    if err != nil { return nil, errors.New("Error creating Items_Holder record") }
+   // if err != nil { return nil, errors.New("Error creating Items_Holder record") }
 
-	err = stub.PutState("allItems", bytes)
+	//err = stub.PutState("allItems", bytes)
 
 //	for i:=0; i < len(args); i=i+2 {
 //		t.add_ecert(stub, args[i], args[i+1])
@@ -136,46 +136,46 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 //				  Returns the username as a string.
 //==============================================================================================================================
 
-func (t *SimpleChaincode) get_username(stub shim.ChaincodeStubInterface) (string, error) {
-
-    username, err := stub.ReadCertAttribute("username");
-	if err != nil { return "", errors.New("Couldn't get attribute 'username'. Error: " + err.Error()) }
-	return string(username), nil
-}
+//func (t *SimpleChaincode) get_username(stub shim.ChaincodeStubInterface) (string, error) {
+//
+//    username, err := stub.ReadCertAttribute("username");
+//	if err != nil { return "", errors.New("Couldn't get attribute 'username'. Error: " + err.Error()) }
+//	return string(username), nil
+//}
 
 //==============================================================================================================================
 //	 check_affiliation - Takes an ecert as a string, decodes it to remove html encoding then parses it and checks the
 // 				  		certificates common name. The affiliation is stored as part of the common name.
 //==============================================================================================================================
 
-func (t *SimpleChaincode) check_affiliation(stub shim.ChaincodeStubInterface) (string, error) {
-    affiliation, err := stub.ReadCertAttribute("role");
-	if err != nil { return "No affiliation", nil } // errors.New("Couldn't get attribute 'role'. Error: " + err.Error()) }
-	return string(affiliation), nil
-
-}
+//func (t *SimpleChaincode) check_affiliation(stub shim.ChaincodeStubInterface) (string, error) {
+//    affiliation, err := stub.ReadCertAttribute("role");
+//	if err != nil { return "No affiliation", nil } // errors.New("Couldn't get attribute 'role'. Error: " + err.Error()) }
+//	return string(affiliation), nil
+//
+//}
 
 //==============================================================================================================================
 //	 get_caller_data - Calls the get_ecert and check_role functions and returns the ecert and role for the
 //					 name passed.
 //==============================================================================================================================
 
-func (t *SimpleChaincode) get_caller_data(stub shim.ChaincodeStubInterface) (string, string, error){
-
-	user, err := t.get_username(stub)
-
-    // if err != nil { return "", "", err }
-
-	// ecert, err := t.get_ecert(stub, user);
-
-    // if err != nil { return "", "", err }
-
-	affiliation, err := t.check_affiliation(stub);
-
-    if err != nil { return "", "", err }
-
-	return user, affiliation, nil
-}
+//func (t *SimpleChaincode) get_caller_data(stub shim.ChaincodeStubInterface) (string, string, error){
+//
+//	user, err := t.get_username(stub)
+//
+//    // if err != nil { return "", "", err }
+//
+//	// ecert, err := t.get_ecert(stub, user);
+//
+//    // if err != nil { return "", "", err }
+//
+//	affiliation, err := t.check_affiliation(stub);
+//
+//    if err != nil { return "", "", err }
+//
+//	return user, affiliation, nil
+//}
 
 //==============================================================================================================================
 //	 retrieve_Item - Gets the state of the data at Item SN in the ledger then converts it from the stored
@@ -225,24 +225,27 @@ func (t *SimpleChaincode) save_changes(stub shim.ChaincodeStubInterface, item It
 //==============================================================================================================================
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-	caller, caller_affiliation, err := t.get_caller_data(stub)
-
-	if err != nil { return nil, errors.New("Error retrieving caller information")}
+//	caller, caller_affiliation, err := t.get_caller_data(stub)
+//
+//	if err != nil { return nil, errors.New("Error retrieving caller information")}
 
 
 	if function == "create_item" {
-        return t.create_item(stub, caller, caller_affiliation, args)
+        return t.create_item(stub, args)
 	} else if function == "ping" {
         return t.ping(stub)
     } else { 																				// If the function is not a create then there must be a item so we need to retrieve the item.
 		//argPos := 1
 
-		//item, err := t.retrieve_item(stub, args[argPos])
+		item, err := t.retrieve_item(stub, args[0])
+		
+		logger.Debug("INVOKE_OTHER_FUNCTIONS args0: ", args[0]);
+        logger.Debug("INVOKE_OTHER_FUNCTIONS item.SN: ", item.SN);
 
         if err != nil { fmt.Printf("INVOKE: Error retrieving item: %s", err); return nil, errors.New("Error retrieving item") }
         
         fmt.Printf("INVOKE: Success retrieving item: %s"); 
-        return nil, errors.New("No function defined")
+       // return nil, errors.New("No function defined %s", args[0])
 
 //        if strings.Contains(function, "update") == false && function != "scrap_vehicle"    { 									// If the function is not an update or a scrappage it must be a transfer so we need to get the ecert of the recipient.
 //
@@ -275,12 +278,14 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-	caller, caller_affiliation, err := t.get_caller_data(stub)
-	if err != nil { fmt.Printf("QUERY: Error retrieving caller details", err); return nil, errors.New("QUERY: Error retrieving caller details: "+err.Error()) }
+//	caller, caller_affiliation, err := t.get_caller_data(stub)
+//	if err != nil { fmt.Printf("QUERY: Error retrieving caller details", err); return nil, errors.New("QUERY: Error retrieving caller details: "+err.Error()) }
 
-    logger.Debug("function: ", function)
-    logger.Debug("caller: ", caller)
-    logger.Debug("affiliation: ", caller_affiliation)
+//    logger.Debug("function: ", function)
+//    logger.Debug("caller: ", caller)
+//    logger.Debug("affiliation: ", caller_affiliation)
+
+      logger.Error("Query args0: ", args[0]);
 
 //	if function == "get_vehicle_details" {
 //		if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
@@ -298,7 +303,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		fmt.Printf("Item args[0]: %s", args[0])
 		item, err := t.retrieve_item(stub, args[0])
 		if err != nil { fmt.Printf("QUERY: Error retrieving item: %s", err); return nil, errors.New("QUERY: Error retrieving item "+err.Error()) }
-		return t.get_item_details(stub, item, caller, caller_affiliation)
+		return t.get_item_details(stub, item)
 	} else if function == "ping" {
 		return t.ping(stub)
 	}
@@ -321,7 +326,7 @@ func (t *SimpleChaincode) ping(stub shim.ChaincodeStubInterface) ([]byte, error)
 //=================================================================================================================================
 //	 Create Vehicle - Creates the initial JSON for the vehcile and then saves it to the ledger.
 //=================================================================================================================================
-func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var item Item
 
 //type Item struct {
@@ -342,16 +347,17 @@ func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, caller s
 	
 	item_json := "{"+sn+manufacturer+owner+description+materials+certifications+"}" 	// Concatenates the variables to create the total JSON object
 
+logger.Debug("item_json: ", item_json);
 //	matched, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(v5cID))  				// matched = true if the v5cID passed fits format of two letters followed by seven digits
 
 //												if err != nil { fmt.Printf("CREATE_VEHICLE: Invalid v5cID: %s", err); return nil, errors.New("Invalid v5cID") }
 
-	if 	sn  == ""  {
+	if 	args[0]  == ""  {
 		fmt.Printf("CREATE_ITEM: Invalid SN provided");
 		return nil, errors.New("Invalid SN provided")
 	}
 
-	err := json.Unmarshal([]byte(item_json), &item)							// Convert the JSON defined above into a vehicle object for go
+	err := json.Unmarshal([]byte(item_json), &item)							// Convert the JSON defined above into a item object for go
 
 	if err != nil { return nil, errors.New("Invalid JSON object") }
 
@@ -369,30 +375,33 @@ func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, caller s
 //
 //	}
 
+logger.Debug("CREATE_ITEM sn: ", sn);
+logger.Debug("CREATE_ITEM item.SN: ", item.SN);
+
 	_, err  = t.save_changes(stub, item)
 
 	if err != nil { fmt.Printf("CREATE_ITEM: Error saving changes: %s", err); return nil, errors.New("Error saving changes") }
 
-	bytes, err := stub.GetState("allItems")
-
-	if err != nil { return nil, errors.New("Unable to get items") }
-
-	var allItems Items_Holder
-
-	err = json.Unmarshal(bytes, &allItems)
-
-	if err != nil {	return nil, errors.New("Corrupt Items_Holder record") }
-
-	allItems.items = append(allItems.items, sn)
-
-
-	bytes, err = json.Marshal(allItems)
-
-	if err != nil { fmt.Print("Error creating Items_Holder record") }
-
-	err = stub.PutState("allItems", bytes)
-
-	if err != nil { return nil, errors.New("Unable to put the state") }
+//	bytes, err := stub.GetState("allItems")
+//
+//	if err != nil { return nil, errors.New("Unable to get items") }
+//
+//	var allItems Items_Holder
+//
+//	err = json.Unmarshal(bytes, &allItems)
+//
+//	if err != nil {	return nil, errors.New("Corrupt Items_Holder record") }
+//
+//	allItems.items = append(allItems.items, sn)
+//
+//
+//	bytes, err = json.Marshal(allItems)
+//
+//	if err != nil { fmt.Print("Error creating Items_Holder record") }
+//
+//	err = stub.PutState("allItems", bytes)
+//
+//	if err != nil { return nil, errors.New("Unable to put the state") }
 
 	return nil, nil
 
@@ -726,7 +735,8 @@ func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, caller s
 //=================================================================================================================================
 //	 get_item_details
 //=================================================================================================================================
-func (t *SimpleChaincode) get_item_details(stub shim.ChaincodeStubInterface, item Item, caller string, caller_affiliation string) ([]byte, error) {
+func (t *SimpleChaincode) get_item_details(stub shim.ChaincodeStubInterface, item Item) ([]byte, error) {
+
 
 	bytes, err := json.Marshal(item)
 
