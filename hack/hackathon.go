@@ -186,7 +186,7 @@ func (t *SimpleChaincode) retrieve_item(stub shim.ChaincodeStubInterface, sn str
 
 	var item Item
 
-	bytes, err := stub.GetState(item.SN);
+	bytes, err := stub.GetState(sn);
 
 	if err != nil {	fmt.Printf("RETRIEVE_ITEM: Failed to invoke Item_code: %s", err); return item, errors.New("RETRIEVE_ITEM: Error retrieving Item with SN = " + sn) }
 
