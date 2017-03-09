@@ -338,7 +338,7 @@ func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, caller s
 	owner          := "\"owner\":\""+args[2]+"\", "
 	description    := "\"description\":\""+args[3]+"\", "
 	materials      := "\"materials\":\""+args[4]+"\", "
-	certifications := "\"certifications\":\""+args[5]+"\", "
+	certifications := "\"certifications\":\""+args[5]+"\""
 	
 	item_json := "{"+sn+manufacturer+owner+description+materials+certifications+"}" 	// Concatenates the variables to create the total JSON object
 
