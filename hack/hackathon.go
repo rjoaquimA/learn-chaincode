@@ -150,7 +150,7 @@ func (t *SimpleChaincode) get_username(stub shim.ChaincodeStubInterface) (string
 
 func (t *SimpleChaincode) check_affiliation(stub shim.ChaincodeStubInterface) (string, error) {
     affiliation, err := stub.ReadCertAttribute("role");
-	if err != nil { return "", errors.New("Couldn't get attribute 'role'. Error: " + err.Error()) }
+	if err != nil { return "No affiliation", nil } // errors.New("Couldn't get attribute 'role'. Error: " + err.Error()) }
 	return string(affiliation), nil
 
 }
