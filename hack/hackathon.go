@@ -208,6 +208,9 @@ func (t *SimpleChaincode) save_changes(stub shim.ChaincodeStubInterface, item It
 	if err != nil { fmt.Printf("SAVE_CHANGES: Error converting item record: %s", err); return false, errors.New("Error converting item record") }
 
 	err = stub.PutState(item.SN, bytes)
+	
+	fmt.Printf("SAVE_CHANGES item.SN: %s", item.SN)
+
 
 	if err != nil { fmt.Printf("SAVE_CHANGES: Error storing item record: %s", err); return false, errors.New("Error storing item record") }
 
@@ -292,6 +295,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 //		return t.get_ecert(stub, args[0])
 	if function == "get_item" {
 		if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
+		fmt.Printf("Item args[0]: %s", args[0])
 		item, err := t.retrieve_item(stub, args[0])
 		if err != nil { fmt.Printf("QUERY: Error retrieving item: %s", err); return nil, errors.New("QUERY: Error retrieving item "+err.Error()) }
 		return t.get_item_details(stub, item, caller, caller_affiliation)
@@ -352,6 +356,10 @@ func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, caller s
 	if err != nil { return nil, errors.New("Invalid JSON object") }
 
 	record, err := stub.GetState(item.SN) 								// If not an error then a record exists so cant create a new item with this SN as it must be unique
+
+    fmt.Printf("ITEM_CREATION sn: %s", sn)
+    fmt.Printf("ITEM_CREATION item.SN: %s", item.SN)
+
 
 	if record != nil { return nil, errors.New("Item already exists") }
 
