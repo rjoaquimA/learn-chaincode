@@ -55,6 +55,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
+	//authorization should be enforced before running the functions
+
 	// Handle different functions
 	if function == "init" {													//initialize the chaincode state, used as reset
 		return t.Init(stub, "init", args)
@@ -129,6 +131,8 @@ func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, args []s
 // Query is our entry point for queries
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("query is running " + function)
+
+	//authorization should be enforced before running the functions
 
     // Handle different functions
     if function == "get_item" {                            //read a variable
