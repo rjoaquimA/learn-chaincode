@@ -19,7 +19,7 @@ package main
 import (
 	"errors"
 	"fmt"
-
+	"strings"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
@@ -60,12 +60,51 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Init(stub, "init", args)
 	} else if function == "create_item" {
 		return t.create_item(stub, args)
+	} else if function == "transfer_ownership" {
+		return t.transfer_ownership(stub, args)
 	}
 	
 	fmt.Println("invoke did not find func: " + function)					//error
 
 	return nil, errors.New("Received unknown function invocation: " + function)
 }
+
+func (t *SimpleChaincode) transfer_ownership(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+    var key, newOwner string
+    var err error
+    fmt.Println("running transfer_ownership()")
+
+    if len(args) != 2 {
+        return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+    }
+
+    key = args[0]                            //rename for fun
+    newOwner = args[1]
+    
+    itemData, err := stub.GetState(key)
+    
+    var value string
+    
+    value = string(itemData)
+    values := strings.Split(value, ";")  
+    values[2] = newOwner
+    newItem := values[0]
+    for i := 1; i< len(values); i++ {
+    	newItem += ";" + values[i]
+    }
+    
+    transaction := stub.GetTxID()
+    
+    newItem += "'" + transaction
+    
+    err = stub.PutState(key, []byte(newItem))  //write the variable into the chaincode state
+    
+    if err != nil {
+        return nil, err
+    }
+    return nil, nil
+}
+
 
 func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
     var key, value string
@@ -77,7 +116,7 @@ func (t *SimpleChaincode) create_item(stub shim.ChaincodeStubInterface, args []s
     }
 
     key = args[0]                            //rename for fun
-    value = args[1]
+    value = args[1] + ";" + stub.GetTxID()
     err = stub.PutState(key, []byte(value))  //write the variable into the chaincode state
     if err != nil {
         return nil, err
