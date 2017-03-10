@@ -95,7 +95,7 @@ func (t *SimpleChaincode) transfer_ownership(stub shim.ChaincodeStubInterface, a
     
     transaction := stub.GetTxID()
     
-    newItem += "|" + transaction
+    newItem += "'" + transaction
     
     err = stub.PutState(key, []byte(newItem))  //write the variable into the chaincode state
     
